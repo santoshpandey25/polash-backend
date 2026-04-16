@@ -1,0 +1,67 @@
+services:
+  # 1. PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: kms-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: "2529"
+      POSTGRES_DB: backendKMS
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # 2. Spring Boot Backend (POLASH.jar)
+  backend:
+    build: .
+    container_name: kms-backend
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    environment:
+      # Database connection (Points to the 'db' container)
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/backendKMS
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: "2529"
+      
+      # Security & JWT
+      JWT_SECRET: 413f4428472b4b6250655368566d597133743677397a24432646294a404e6352
+      JWT_EXPIRATION: 1800000
+      
+      # Email Configuration (STRICTLY ://gmail.com)
+      SPRING_MAIL_HOST: smtp.gmail.com
+      SPRING_MAIL_PORT: 465
+      SPRING_MAIL_USERNAME: sanpan2529@gmail.com
+      SPRING_MAIL_PASSWORD: "ryyd rofl dwax fwte"
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: "true"
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_SSL_ENABLE: "true"
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_SOCKETFACTORY_PORT: 465
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_SOCKETFACTORY_CLASS: "javax.net.ssl.SSLSocketFactory"
+      
+      # SSL Trust & Protocols (Fixes PKIX errors)
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_SSL_TRUST: smtp.gmail.com
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_SSL_PROTOCOLS: TLSv1.2
+      
+      # Debugging Logs
+      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB: DEBUG
+      LOGGING_LEVEL_ORG_HIBERNATE_SQL: DEBUG
+      LOGGING_LEVEL_COM_KMS_BACKEND: DEBUG
+    volumes:
+      - ./uploads:/app/uploads # Maps the photos to your friend's local folder
+
+  # 3. pgAdmin (Database Viewer)
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: kms-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:
