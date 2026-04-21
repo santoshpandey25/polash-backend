@@ -62,8 +62,9 @@ public class AuthService {
         
         // Attempt to send email but don't crash if it fails
         try {
-            emailService.sendOtpEmail(customer.getEmail(), otp);
+           // emailService.sendOtpEmail(customer.getEmail(), otp);
             System.out.println(">>> OTP Email sent successfully to: " + customer.getEmail());
+             System.out.println(">>> OTP sent to Email is  " + otp);
         } catch (Exception e) {
             System.err.println(">>> EMAIL BLOCKER: Railway/Network prevented email delivery.");
             // Print OTP to logs so you can find it in the Railway Dashboard

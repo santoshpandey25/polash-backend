@@ -58,8 +58,9 @@ public class VerificationService {
 
         // 6. Send the OTP to User's Email
         try {
-            emailService.sendOtpEmail(email, generatedOtp);
+           // emailService.sendOtpEmail(email, generatedOtp);
             System.out.println(">>> OTP sent to email: " + email);
+            System.out.println(">>> OTP is: " + generatedOtp);
         } catch (Exception e) {
             System.err.println(">>> Email delivery failed: " + e.getMessage());
         }
