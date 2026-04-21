@@ -1,15 +1,17 @@
 package com.kms.backend.model;
 
+import java.time.LocalDateTime;
 import jakarta.persistence.*;
 import lombok.*;
 
 @Entity @Table(name = "CUSTOMER")
 @Data @NoArgsConstructor @AllArgsConstructor
 public class Customer {
-    @Id private String id; // tempUserId
+    @Id private String id; 
     @Column(nullable = false) private String password;
     @Column(nullable = false) private String email;
     @Column(nullable = false) private String phone;
+    
     private String address;
     private String aadhar;
     private String pan;
@@ -17,9 +19,12 @@ public class Customer {
     private String lastName;
     private Boolean fatca;
     private String profileImageLink;
-    private String status;
+    private String status; // ACTIVE, PENDING_VERIFICATION
+    
+    
+    private String otp_code;          
+    private LocalDateTime otp_expiry;
 
-    // Recommendation: Integrated Nominee fields
     private String nomineeName;
     private String nomineeEmail;
     private String nomineePhone;

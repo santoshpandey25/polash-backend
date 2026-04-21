@@ -31,7 +31,8 @@ public class SecurityConfig {
             .cors(cors -> {}) // Standard CORS handling
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/mobile/login", "/portal/login").permitAll()
+               .requestMatchers("/mobile/login", "/mobile/signup", "/mobile/verify-signup", "/portal/login").permitAll()
+
                 .anyRequest().authenticated()
             )
             // 3. THIS IS THE CRITICAL LINE:
