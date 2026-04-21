@@ -30,10 +30,11 @@ public class AuthService {
     private PasswordEncoder passwordEncoder;
     
     @Autowired
-    private EmailService emailService; // Ensure this is injected
+    private EmailService emailService;
 
     /**
-     * 1. SIGNUP: Creates a PENDING user and sends OTP
+     * 1. SIGNUP: Creates a PENDING user and attempts to send OTP.
+     * If email fails due to cloud network restrictions, the user is still saved.
      */
     public void registerUser(SignupRequest request) {
         if (customerRepository.existsById(request.getUserId())) {
@@ -48,7 +49,7 @@ public class AuthService {
         customer.setFirstName(request.getFirstName());
         customer.setLastName(request.getLastName());
         
-        // Mark as PENDING until OTP is verified
+        // Initial status is PENDING
         customer.setStatus("PENDING_VERIFICATION");
 
         // Generate 6-digit OTP
@@ -56,14 +57,22 @@ public class AuthService {
         customer.setOtp_code(otp);
         customer.setOtp_expiry(LocalDateTime.now().plusMinutes(15));
 
+        // Save to Database first
         customerRepository.save(customer);
         
-        // Trigger Email
-        emailService.sendOtpEmail(customer.getEmail(), otp);
+        // Attempt to send email but don't crash if it fails
+        try {
+            emailService.sendOtpEmail(customer.getEmail(), otp);
+            System.out.println(">>> OTP Email sent successfully to: " + customer.getEmail());
+        } catch (Exception e) {
+            System.err.println(">>> EMAIL BLOCKER: Railway/Network prevented email delivery.");
+            // Print OTP to logs so you can find it in the Railway Dashboard
+            System.out.println(">>> [DEBUG LOG] OTP for " + customer.getId() + " is: " + otp);
+        }
     }
 
     /**
-     * 2. ACTIVATE: Verifies Signup OTP and enables the user
+     * 2. ACTIVATE: Verifies Signup OTP and enables the user.
      */
     public void activateUser(String userId, String otp) {
         Customer customer = customerRepository.findById(userId)
@@ -82,13 +91,12 @@ public class AuthService {
     }
 
     /**
-     * 3. LOGIN: Now checks if the status is ACTIVE
+     * 3. LOGIN: Checks credentials and ensures account is ACTIVE.
      */
     public String loginMobile(String tempUserId, String rawPassword) {
         Customer customer = customerRepository.findById(tempUserId)
                 .orElseThrow(() -> new RuntimeException("Mobile user not found with ID: " + tempUserId));
 
-        // SECURITY CHECK: Block users who haven't verified their email
         if (!"ACTIVE".equals(customer.getStatus())) {
             throw new RuntimeException("Account not activated. Please verify your email first.");
         }
@@ -100,6 +108,9 @@ public class AuthService {
         }
     }
 
+    /**
+     * 4. PORTAL LOGIN: Staff authentication.
+     */
     public Map<String, Object> loginPortal(String adId, String password) {
         Long solId = Long.parseLong(adId);
         Employees emp = employeesRepository.findById(solId)
